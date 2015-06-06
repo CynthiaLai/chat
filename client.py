@@ -3,7 +3,7 @@ import select
 import thread
 import time
 import sys
-import Queue
+import getpass
 
 serverName = socket.gethostname()
 serverPort = 12035
@@ -23,23 +23,25 @@ def commmdThread(cmndSock):
         command_rec = raw_input('>')
         if command_rec == '1':
             global msg_list
-            chat_mode = 1
+            chat_mode = 1 
             command_rec = '1'		
             cmndSock.send(command_rec)
             chat_user = raw_input('\nchoose user: (quit to exit chat mode)\n')
-                
-            cmndSock.send(chat_user)
-            msg = raw_input('msg : ')
-            msg = 'send' + ' ' + chat_user + ' ' + msg
-            clientSocket.send(msg)
+
+            while chat_user != 'quit':
+                cmndSock.send(chat_user)
+                msg = raw_input('msg : ')
+                if msg == 'quit':
+                    break
+                msg = 'send' + ' ' + chat_user + ' ' + msg
+                clientSocket.send(msg)
         elif command_rec == '2':	
             cmndSock.send(command_rec)
             print 'list user'
         elif command_rec == '3':
             cmndSock.send(command_rec)
             broad_msg = raw_input('broadcast msg: ')
-            cmndSock.send(broad_msg)
-                               
+            cmndSock.send(broad_msg)                           
         elif command_rec == '4':
             global logout_flag
             cmndSock.send(command_rec)
@@ -47,7 +49,7 @@ def commmdThread(cmndSock):
             print name + ' logout'
             logout_flag = 1
             break
-
+    
 print 'log in '
 #receive username & password
 name = raw_input('username : ')
@@ -55,7 +57,7 @@ clientSocket.send(name)
 
 passkey = clientSocket.recv(1024)
 if (passkey == '01'):
-    passwd = raw_input('password : ')
+    passwd = getpass.getpass('password : ')
     clientSocket.send(passwd)
     passkey = clientSocket.recv(1024)
     if (passkey == '02'):

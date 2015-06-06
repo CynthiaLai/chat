@@ -35,6 +35,7 @@ def broadcast_data (sock, message):
                 CONNECTION_LIST.remove(socket)
 
 def log_in():
+    global online
     #check username & password
     name = connectionSocket.recv(1024)
     for i in range(len(list_name)):
@@ -58,11 +59,15 @@ def log_in():
                     connectionSocket.send(off_msg[list_name[i]])
             else:
                 print 'error passwd'
+        else:
+            print 'no this user'
 
     if no_find == 1:
         print 'error user'
 
 def acceptThread(connSock):
+    global online
+    global ex_socket
     print 'client is accepted'
     while 1:
         #command mode
@@ -79,24 +84,27 @@ def acceptThread(connSock):
             chat_user = connSock.recv(1024) #get username
             chat_user = chat_user[0:5]
             print chat_user
+            if chat_user == 'quit':
+                print 'quit!!'
 
             for sock in r_sockets:
-                if chat_user in list_name:
-                    print 'user exist'
-                    
-                    data = sock.recv(1024)
-                    if data == 'quit\n':
-                        break
-                    if data[0:4] == 'send':
-                        for i in range(len(list_name)):
-                            if list_name[i] == data[5:10]:
-                                ex_socket[i].send(data[10:len(data)])
-                else:
-                    print 'user not online'
-                    data = sock.recv(1024)
-                    print data
-                    off_msg[data[5:10]] = data[10:len(data)]
-
+                for i in range(len(list_name)):
+                    if chat_user == list_name[i]:
+                        if online[i] == 1:
+                            print i
+                            print online[i]
+                            print 'user exist'			
+                            while(1):
+                                data = sock.recv(1024)
+                                if data[0:4] == 'send':
+                                    for i in range(len(list_name)):
+                                        if list_name[i] == data[5:10]:
+                                            ex_socket[i].send(data[10:len(data)])
+                    else:
+                        print 'user not online'
+                        data = sock.recv(1024)
+                        print data
+                        off_msg[data[5:10]] = data[10:len(data)]
         #list
         elif command_rec == '2':
             print 'listonline'
@@ -109,7 +117,6 @@ def acceptThread(connSock):
             for i in range(len(list_name)):
                 if (ex_socket[i] != '0') and (ex_socket[i] != connSock):
                     ex_socket[i].send(message)
-                    #broadcast_data (connSock,  message)
         elif command_rec == '4':
             name = connSock.recv(1024)
             listonline.remove(name)
@@ -122,7 +129,7 @@ while 1:
 
     no_find = 1
     log_in()
-    
+
     thread.start_new_thread(acceptThread, (connectionSocket,))
     
 connectionSocket.close()
